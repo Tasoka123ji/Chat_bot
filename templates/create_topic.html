@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Topic</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f4f4f4;
+        }
+
+        .form-container {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 400px;
+        }
+
+        .form-container h1 {
+            margin-bottom: 20px;
+            font-size: 24px;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 10px;
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .submit-btn:hover {
+            background-color: #0056b3;
+        }
+
+        .response-container {
+            margin-top: 15px;
+            font-size: 14px;
+            color: green;
+            text-align: center;
+        }
+
+        .error {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h1>Create Topic</h1>
+        <form id="createTopicForm">
+            <div class="form-group">
+                <label for="topicId">Topic ID</label>
+                <input type="number" id="topicId" required>
+            </div>
+
+            <div class="form-group">
+                <label for="title">Title</label>
+                <input type="text" id="title" required>
+            </div>
+
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea id="description" rows="4"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="subtopicId">Subtopic ID</label>
+                <input type="number" id="subtopicId" required>
+            </div>
+
+            <div class="form-group">
+                <label for="subtopicTitle">Subtopic Title</label>
+                <input type="text" id="subtopicTitle" required>
+            </div>
+
+            <div class="form-group">
+                <label for="subtopicContent">Subtopic Content</label>
+                <textarea id="subtopicContent" rows="3" required></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="roleIds">Role IDs (comma-separated)</label>
+                <input type="text" id="roleIds" required>
+            </div>
+
+            <div class="form-group">
+                <label for="attachmentId">Attachment ID</label>
+                <input type="number" id="attachmentId" required>
+            </div>
+
+            <div class="form-group">
+                <label for="attachmentFileName">Attachment File Name</label>
+                <input type="text" id="attachmentFileName" required>
+            </div>
+
+            <div class="form-group">
+                <label for="attachmentFileType">Attachment File Type</label>
+                <input type="text" id="attachmentFileType" required>
+            </div>
+
+            <button type="submit" class="submit-btn">Submit</button>
+        </form>
+        <div id="responseMessage" class="response-container"></div>
+    </div>
+
+    <script>
+        const form = document.getElementById('createTopicForm');
+        const responseMessage = document.getElementById('responseMessage');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const topicId = parseInt(document.getElementById('topicId').value);
+            const subtopicId = parseInt(document.getElementById('subtopicId').value);
+            const attachmentId = parseInt(document.getElementById('attachmentId').value);
+
+            const data = {
+                id: topicId,
+                title: document.getElementById('title').value,
+                description: document.getElementById('description').value,
+                subtopics: [
+                    {
+                        id: subtopicId,
+                        title: document.getElementById('subtopicTitle').value,
+                        content: document.getElementById('subtopicContent').value,
+                        topicId: topicId,
+                        roleIds: document.getElementById('roleIds').value.split(',').map(Number),
+                        attachments: [
+                            {
+                                id: attachmentId,
+                                topicId: null,
+                                subTopicId: subtopicId,
+                                fileName: document.getElementById('attachmentFileName').value,
+                                fileType: document.getElementById('attachmentFileType').value
+                            }
+                        ]
+                    }
+                ],
+                attachments: [
+                    {
+                        id: attachmentId + 1,
+                        topicId: topicId,
+                        subTopicId: null,
+                        fileName: document.getElementById('attachmentFileName').value,
+                        fileType: document.getElementById('attachmentFileType').value
+                    }
+                ]
+            };
+
+            try {
+                const response = await fetch('http://192.168.40.142:5000/create_topic', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    responseMessage.textContent = result.message;
+                    responseMessage.classList.remove('error');
+                } else {
+                    responseMessage.textContent = result.error || 'Failed to create topic';
+                    responseMessage.classList.add('error');
+                }
+            } catch (error) {
+                responseMessage.textContent = 'Error: Unable to connect to server';
+                responseMessage.classList.add('error');
+            }
+        });
+    </script>
+</body>
+</html>
